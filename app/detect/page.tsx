@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Pose, POSE_CONNECTIONS } from '@mediapipe/pose';
 import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import './styles.css';
 
 // Define el tipo para ACTION_NAMES
 const ACTION_NAMES: { [key: number]: string } = {
@@ -25,9 +26,24 @@ export default function Detect() {
   
   // Añadido para la validación de detecciones
   const [detectionHistory, setDetectionHistory] = useState<number[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState(300);
   const historyLength = 2; // Número de fotogramas para verificar consistencia
   const minConsistency = 0.7; // Porcentaje mínimo de consistencia
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+  
   useEffect(() => {
     const onResults = (results: any) => {
       const video = videoRef.current;
@@ -184,12 +200,13 @@ export default function Detect() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-4xl font-bold mb-4">Pose Detection</h1>
+    <div className="container">
+      <h1 className="title">Pose Detection</h1>
       <video ref={videoRef} className="hidden" />
-      <canvas ref={canvasRef} width="640" height="480" />
-      <div className="mt-4 text-2xl">
-        Action: {poseCode !== null ? ACTION_NAMES[poseCode as number] : 'N/A'}
+      <canvas ref={canvasRef} width="640" height="480" className="canvas" />
+      <div className="info">
+        <div className="action">Acción detectada: {poseCode !== null ? ACTION_NAMES[poseCode as number] : 'N/A'}</div>
+        <div className="timer">Tiempo restante: {formatTime(timeRemaining)}</div>
       </div>
     </div>
   );
