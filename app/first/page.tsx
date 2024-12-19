@@ -89,7 +89,7 @@ const PlayerDetection = () => {
 
           // Verificar si los brazos están levantados
           if (checkIfArmsRaised(keypoints)) {
-            router.push("/game"); // Redirigir a "/second" si los brazos están levantados
+            router.push("/merge"); // Redirigir a "/second" si los brazos están levantados
           }
         } else {
           noPointsDetectedCounter++;

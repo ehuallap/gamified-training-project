@@ -1,22 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Pose, POSE_CONNECTIONS } from '@mediapipe/pose';
-import { Camera } from '@mediapipe/camera_utils';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import './styles.css';
-
-const ACTION_NAMES: { [key: number]: string } = {
-  1: 'Corriendo recto',
-  2: 'Parado',
-  3: 'Corriendo y Habilidad Especial',
-  4: 'Corriendo y Yendo a Izquierda',
-  5: 'Corriendo y Yendo a Derecha',
-  6: 'Corriendo y Saltando a la izquierda',
-  7: 'Corriendo y Saltando a la derecha',
-  8: 'Corriendo y Saltando hacia adelante',
-  0: 'Desconocido',
-};
+import React, { useState, useEffect } from 'react';
+import styles from './Game.module.css';
 
 const Game = () => {
   const [playerLane, setPlayerLane] = useState(1);
@@ -61,7 +46,7 @@ const Game = () => {
       const jumpDuration = 900;
       const jumpHeight = 220;
       const startTime = Date.now();
-      
+
       const jumpInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const t = elapsed / jumpDuration;
@@ -82,9 +67,9 @@ const Game = () => {
   }, [jumping]);
 
   const checkCollisions = () => {
-    const playerRect = document.querySelector('.player')!.getBoundingClientRect();
+    const playerRect = document.querySelector(`.${styles.player}`)!.getBoundingClientRect();
     obstacles.forEach(obstacle => {
-      const obstacleRect = document.querySelector(`.obstacle[data-id="${obstacle.id}"]`)!.getBoundingClientRect();
+      const obstacleRect = document.querySelector(`.${styles.obstacle}[data-id="${obstacle.id}"]`)!.getBoundingClientRect();
       if (
         playerRect.left < obstacleRect.right &&
         playerRect.right > obstacleRect.left &&
@@ -96,7 +81,7 @@ const Game = () => {
       }
     });
 
-    const enemyRect = document.querySelector('.enemy')!.getBoundingClientRect();
+    const enemyRect = document.querySelector(`.${styles.enemy}`)!.getBoundingClientRect();
     if (
       playerRect.left < enemyRect.right &&
       playerRect.right > enemyRect.left &&
@@ -221,10 +206,34 @@ const Game = () => {
     }
   }, [playerLane]);
 
+  useEffect(() => {
+    const enemyInterval = setInterval(() => {
+      setEnemyPosition(prev => {
+        const playerRect = document.querySelector(`.${styles.player}`)!.getBoundingClientRect();
+        const enemyRect = document.querySelector(`.${styles.enemy}`)!.getBoundingClientRect();
+
+        if (!movingForward) {
+          const enemyX = prev.x + (playerRect.left - enemyRect.left) * 0.05;
+          const enemyY = prev.y + (playerRect.top - enemyRect.top) * 0.05;
+          return { x: enemyX, y: enemyY };
+        } else {
+          const enemyLane = Math.floor(playerLeft / (gameWidth / 3));
+          const targetX = enemyLane * (gameWidth / 3) + (gameWidth / 3 - 100) / 2;
+          return {
+            x: prev.x + (targetX - prev.x) * 0.1,
+            y: window.innerHeight - 100
+          };
+        }
+      });
+    }, 50);
+
+    return () => clearInterval(enemyInterval);
+  }, [movingForward, playerLeft]);
+
   const obstacleElements = obstacles.map((obstacle) => (
     <div
       key={obstacle.id}
-      className="obstacle"
+      className={styles.obstacle}
       data-id={obstacle.id}
       style={{ top: `${obstacle.y}px`, left: `${obstacle.lane * (gameWidth / 3) + (gameWidth / 3 - 100) / 2}px` }}
     />
@@ -232,131 +241,17 @@ const Game = () => {
 
   const enemyElement = (
     <div
-      className="enemy"
+      className={styles.enemy}
       style={{ top: `${enemyPosition.y}px`, left: `${enemyPosition.x}px` }}
     />
   );
 
-  // Detect component starts here
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [poseCode, setPoseCode] = useState<number | null>(null);
-  
-  const [detectionHistory, setDetectionHistory] = useState<number[]>([]);
-  const [timeRemaining, setTimeRemaining] = useState(300);
-  const historyLength = 2;
-  const minConsistency = 0.7;
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-  
-  useEffect(() => {
-    const onResults = (results: any) => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (canvas && video) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.save();
-          ctx.scale(-1, 1);
-          ctx.translate(-canvas.width, 0);
-          ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-          ctx.restore();
-
-          if (results.poseLandmarks) {
-            drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
-              color: '#00FF00',
-              lineWidth: 4,
-            });
-            drawLandmarks(ctx, results.poseLandmarks, {
-              color: '#FF0000',
-              lineWidth: 2,
-            });
-
-            const actionCode = classifyAction(results.poseLandmarks);
-
-            setDetectionHistory(prevHistory => {
-              const newHistory = [...prevHistory, actionCode];
-              return newHistory.length > historyLength ? newHistory.slice(1) : newHistory;
-            });
-
-            const mode = determineMode();
-            setPoseCode(mode);
-          }
-        }
-      }
-    };
-
-    const pose = new Pose({
-      locateFile: (file: string) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${POSE.VERSION}/${file}`;
-      }
-    });
-    pose.setOptions({
-      modelComplexity: 1,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-    pose.onResults(onResults);
-
-    const camera = new Camera(videoRef.current!, {
-      onFrame: async () => {
-        await pose.send({ image: videoRef.current! });
-      },
-      width: 640,
-      height: 480
-    });
-    camera.start();
-  }, []);
-
-  const classifyAction = (poseLandmarks: any) => {
-    // Logic to classify the action based on poseLandmarks
-    return 1; // For now, just a placeholder
-  };
-
-  const determineMode = () => {
-    // Logic to determine mode
-    return 1; // For now, just a placeholder
-  };
-
-  // Rendering of game components
   return (
-    <div className="game">
-      <div className="gameArea">
-        <video
-          ref={videoRef}
-          className="video"
-          autoPlay
-          muted
-          width="640"
-          height="480"
-        ></video>
-        <canvas
-          ref={canvasRef}
-          className="canvas"
-          width="640"
-          height="480"
-        ></canvas>
-        {enemyElement}
-        {obstacleElements}
-        <div className="player" style={{ top: `${playerTop}px`, left: `${playerLeft}px` }} />
-        <div className="scoreboard">
-          <span>Score: {score}</span>
-          <span>Time: {formatTime(timeRemaining)}</span>
-        </div>
-      </div>
+    <div className={styles.gameContainer} style={{ width: `${gameWidth}px`, height: '100vh' }}>
+      <div className={styles.player} style={{ left: `${playerLeft}px`, top: `${playerTop}px` }} />
+      {obstacleElements}
+      {enemyElement}
+      <div className={styles.score}>Score: {score}</div>
     </div>
   );
 };

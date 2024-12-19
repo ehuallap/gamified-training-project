@@ -7,10 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   const handleDetection = () => {
-    router.push('/detect');
-  };
-  const handleGame = () => {
-    router.push('/game');
+    router.push('/first');
   };
 
   return (
@@ -21,12 +18,6 @@ export default function Home() {
         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
       >
         Detección
-      </button>
-      <button
-        onClick={handleGame}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-      >
-        Juego
       </button>
     </div>
   );

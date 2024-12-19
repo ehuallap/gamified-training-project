@@ -1,0 +1,23 @@
+/* app/combined/combined.module.css */
+.container {
+    display: flex;
+    width: 100vw; /* Usa todo el ancho de la pantalla */
+    height: 100vh; /* Usa toda la altura de la pantalla */
+    margin: 0;
+    overflow: hidden; /* Evita desplazamiento */
+    box-sizing: border-box; /* Incluye padding y border en las dimensiones */
+}
+
+.game {
+    flex: 3; /* 75% del ancho */
+    background-color: #f0f0f0;
+    padding: 20px;
+    overflow: hidden; /* Evita desbordamiento interno */
+}
+
+.detect {
+    flex: 1; /* 25% del ancho */
+    background-color: #e0f7fa;
+    padding: 20px;
+    overflow: hidden; /* Evita desbordamiento interno */
+}

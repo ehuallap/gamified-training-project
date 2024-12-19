@@ -1,10 +1,9 @@
 "use client";
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Pose, POSE_CONNECTIONS } from '@mediapipe/pose';
 import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import './styles.css';
+import styles from './Detect.module.css';
 
 // Define el tipo para ACTION_NAMES
 const ACTION_NAMES: { [key: number]: string } = {
@@ -24,11 +23,10 @@ export default function Detect() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseCode, setPoseCode] = useState<number | null>(null);
   
-  // Añadido para la validación de detecciones
   const [detectionHistory, setDetectionHistory] = useState<number[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(300);
-  const historyLength = 2; // Número de fotogramas para verificar consistencia
-  const minConsistency = 0.7; // Porcentaje mínimo de consistencia
+  const historyLength = 2;
+  const minConsistency = 0.7;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,7 +41,7 @@ export default function Detect() {
     const seconds = time % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
-  
+
   useEffect(() => {
     const onResults = (results: any) => {
       const video = videoRef.current;
@@ -72,11 +70,9 @@ export default function Detect() {
             // Classify the action based on the landmarks
             const actionCode = classifyAction(results.poseLandmarks);
             
-            // Actualizar historial de detecciones
             setDetectionHistory(prevHistory => {
               const newHistory = [...prevHistory, actionCode].slice(-historyLength);
               if (newHistory.length === historyLength) {
-                // Verificar consistencia
                 const counts = newHistory.reduce((acc: any, code: number) => {
                   acc[code] = (acc[code] || 0) + 1;
                   return acc;
@@ -156,7 +152,6 @@ export default function Detect() {
     const isRightArmStretched = rightElbowAngle >= 90 && rightElbowAngle <= 180;
     const isBothArmsStretched = isLeftArmStretched && isRightArmStretched;
 
-    // Codificación de acciones
     const ACTION_CODES = {
       RUNNING_STRAIGHT: 1,
       STANDING: 2,
@@ -200,13 +195,15 @@ export default function Detect() {
   };
 
   return (
-    <div className="container">
-      <h1 className="title">Pose Detection</h1>
-      <video ref={videoRef} className="hidden" />
-      <canvas ref={canvasRef} width="640" height="480" className="canvas" />
-      <div className="info">
-        <div className="action">Acción detectada: {poseCode !== null ? ACTION_NAMES[poseCode as number] : 'N/A'}</div>
-        <div className="timer">Tiempo restante: {formatTime(timeRemaining)}</div>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Pose Detection</h1>
+      <video ref={videoRef} className={styles.hidden} />
+      <canvas ref={canvasRef} width="640" height="480" className={styles.canvas} />
+      <div className={styles.info}>
+        <div className={styles.action}>
+          Acción detectada: {poseCode !== null ? ACTION_NAMES[poseCode as number] : 'N/A'}
+        </div>
+        <div className={styles.timer}>Tiempo restante: {formatTime(timeRemaining)}</div>
       </div>
     </div>
   );

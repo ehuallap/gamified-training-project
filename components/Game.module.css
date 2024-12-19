@@ -1,0 +1,83 @@
+
+.game-container {
+    position: relative;
+    width: 75vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%) !important; /* Fondo degradado elegante */
+    background-color: #000000 !important; /* Fondo sólido oscuro */
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+
+.player {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: #e91e63; /* Color vibrante para el jugador */
+  border-radius: 50%; /* Bordes redondeados */
+  bottom: 0;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+  transition: transform 0.5s ease-in-out, left 0.3s ease-in-out;
+  z-index: 1;
+}
+
+.player.jump {
+  animation: jump 0.8s ease-in-out;
+}
+
+@keyframes jump {
+  0% { transform: translateY(0); }
+  55% { transform: translateY(-220px); }
+  100% { transform: translateY(0); }
+}
+
+.obstacle {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); /* Gradiente para simular 3D */
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.3), 0 10px 20px rgba(0, 0, 0, 0.5); /* Sombra interna y externa para 3D */
+  transform: perspective(500px) rotateX(20deg); /* Efecto 3D */
+  transition: 0.3s linear;
+}
+
+.game-container:before, .game-container:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.2); /* Líneas divisorias sutiles */
+}
+
+.game-container:before {
+  left: 33.33%;
+}
+
+.game-container:after {
+  left: 66.66%;
+}
+
+.score {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 24px;
+  color: #ffffff; /* Color blanco elegante */
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 15px; /* Padding más amplio */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Sombra */
+}
+
+.enemy {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: #ffeb3b; /* Color amarillo brillante */
+  border-radius: 50%; /* Enemigo circular */
+  transition: top 0.1s linear, left 0.1s linear;
+  z-index: 1;
+}
